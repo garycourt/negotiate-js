@@ -1,0 +1,24 @@
+{
+	"host" : "garycourt.com",
+	"method" : "GET",
+	"path" : "/article/1",
+	"accept" : [
+		["text/html", {}],
+		["application/xhtml+xml", {}],
+		["application/xml", { "q" : 0.9 }],
+		["*/*", { "q" : 0.8 }]
+	],
+	"accept-charset" : [
+		["ISO-8859-1", {}],
+		["utf-8", { "q" : 0.7 }],
+		["*", { "q" : 0.7 }]
+	],
+	"accept-encoding" : [
+		["gzip", {}],
+		["deflate", {}]
+	],
+	"accept-language" : [
+		["en-us", {}],
+		["en", { "q" : 0.5 }]
+	]
+}

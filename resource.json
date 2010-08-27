@@ -1,0 +1,21 @@
+{
+	"path" : "/article/{id}",
+	"variants" : [
+		{
+			"method" : "GET",
+			"type" : "text/html",
+			"language" : "en-ca",
+			"charset" : "UTF-8",
+			"encoding" : "identity",
+			"quality" : 1.0,
+			"handler" : "JSTemplate",
+			"config" : {
+				"template" : { "$ref" : "db:/templates/blogPost" },
+				"context" : {
+					"post" : { "$ref" : "db:/posts/{id}" }
+				}
+			},
+			"expires" : 1234567890
+		}
+	]
+}
