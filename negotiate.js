@@ -30,7 +30,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*jslint white: true, onevar: true, undef: true, eqeqeq: true, newcap: true, immed: true */
+/*jslint white: true, onevar: true, undef: true, eqeqeq: true, newcap: true, immed: true, sub: true */
 
 var exports = exports || this,
 	require = require || function () {
@@ -39,86 +39,223 @@ var exports = exports || this,
 
 (function () {
 	
+	var O = {};
+	
+	function typeOf(o) {
+		return o === undefined ? 'undefined' : (o === null ? 'null' : Object.prototype.toString.call(o).split(' ').pop().split(']').shift().toLowerCase());
+	}
+	
+	function isNumeric(o) {
+		return typeof o === "number" || (typeof o === "string" && /^\s*-?(0x)?\d+(.\d+)?\s*$/.test(o));
+	}
+	
+	function F() {}
+	function delegateObject(obj) {
+		F.prototype = obj;
+		return new F();
+	}
+	
 	function toArray(o) {
 		return o !== undefined && o !== null ? (o instanceof Array && !o.callee ? o : (typeof o.length !== 'number' || o.split || o.setInterval || o.call ? [ o ] : Array.prototype.slice.call(o))) : [];
 	}
 	
-	function filterArray(arr, func, scope) {
-		var x = 0, xl = arr.length, newArr = [];
-		for (; x < xl; ++x) {
-			if (func.call(scope, arr[x], x, arr)) {
-				newArr[newArr.length] = arr[x];
-			}
-		}
-		return newArr;
-	}
+	function clone(obj, deep) {
+		var newObj, x;
 		
-	if (Array.prototype.filter) {
-		filterArray = function (arr, func, scope) {
-			return Array.prototype.filter.call(arr, func, scope);
-		};
+		switch (typeOf(obj)) {
+		case 'undefined':
+			return;
+		case 'null':
+			return null;
+		case 'boolean':
+			return !!obj;
+		case 'number':
+			return +obj;
+		case 'string':
+			return '' + obj;
+		case 'object':
+			if (deep) {
+				newObj = {};
+				for (x in obj) {
+					if (obj[x] !== O[x]) {
+						newObj[x] = clone(obj[x], deep);
+					}
+				}
+				return newObj;
+			} else {
+				return delegateObject(obj);
+			}
+			break;
+		case 'array':
+			if (deep) {
+				newObj = new Array(obj.length);
+				x = obj.length;
+				while (--x >= 0) {
+					newObj[x] = clone(obj[x], deep);
+				}
+				return newObj;
+			} else {
+				return Array.pototype.slice.call(obj);
+			}
+			break;
+		case 'function':
+			newObj = function () {
+				return obj.apply(this, arguments);
+			};
+			F.prototype = undefined;
+			for (x in obj) {
+				if (obj[x] !== F[x]) {
+					newObj[x] = clone(obj[x], deep);
+				}
+			}
+			return newObj;
+		case 'regexp':
+			return new RegExp(obj);
+		case 'date':
+			return new Date(obj);
+		}
+	}
+	
+	function uc(str, deflt) {
+		return (str || deflt || '').toUpperCase();
 	}
 	
 	function lc(str, deflt) {
 		return (str || deflt || '').toLowerCase();
 	}
 	
+	function parseHeaderElements(headerValue) {
+		//TODO
+	}
+	
 	function choose(variants, request) {
-		var requestMethod = lc(request.method, 'GET');
+		var y, yl, x, xl, headers, variant, accepts, variantValue, requestValue, params, q;
 		
 		variants = clone(variants, true);
-		variants = toArray(variants);
+		headers = {
+			method : uc(request['method'], 'GET'),
+			acceptType : parseHeaderElements(request['accept']),
+			acceptLanguage : parseHeaderElements(request['accept-language']),
+			acceptCharset : parseHeaderElements(request['accept-charset']),
+			acceptEncoding : parseHeaderElements(request['accept-encoding'])
+		};
 		
-		//filter by request method
-		variants = filterArray(variants, function (variant) {
-			return lc(variant.method, 'GET') === requestMethod;
-		});
-		
-		//filter by media type
-		variants = filterArray(variants, function (variant) {
-			var matches = false, qt, mediaType, type,
-				accepts = toArray(request.accept), x, xl,
-				variantType = lc(variant.type);
+		for (y = 0, yl = variants.length; y < yl; ++y) {
+			variant = variants[y];
 			
-			for (x = 0, xl = accepts.length; x < xl; ++x) {
-				mediaType = toArray(accepts[x]);
-				type = lc(mediaType[0]);
-				
-				if (type === '*' || type === '*/*' || type === variantType || (/^(.+\/)\*$/.test(type) && variantType.indexOf(RegExp.$1) === 0)) {
-					qt = (typeof mediaType[1] === 'object' && isNumeric(mediaType[1].q) ? parseFloat(mediaType[1].q, 10) : 1.0);
-					variant.qt = Math.max(variant.qt || 0, qt);
-					matches = true;
-				}
+			//quality of request method
+			variantValue = uc(variant['method'], 'GET');
+			if (variantValue === headers.method) {
+				variant.qm = 1.0;
+			} else if (headers.method === 'HEAD' && variantValue === 'GET') {
+				variant.qm = 0.5;
+			} else {
+				variant.qm = 0.0;
 			}
 			
-			return matches;
-		});
-		
-		//filter by language
-		variants = filterArray(variants, function (variant) {
-			var matches = false, ql, language, lang,
-				accepts = toArray(request.accept), x, xl,
-				variantLanguage = lc(variant.language);
-			
-			//never reject solely on language
-			variant.ql = 0.001;
-			matches = true;
-			
-			for (x = 0, xl = accepts.length; x < xl; ++x) {
-				language = toArray(accepts[x]);
-				lang = lc(language[0]);
-				
-				if (lang === '*' || lang === variantLanguage || (/^([a-z]+)\-[a-z]+$/.test(lang) && variantLanguage === RegExp.$1)) {
-					ql = (typeof language[1] === 'object' && isNumeric(language[1].q) ? parseFloat(language[1].q, 10) : 1.0);
-					variant.ql = Math.max(variant.ql || 0, ql);
-					matches = true;
+			//quality of media type
+			accepts = headers.acceptType;
+			variantValue = lc(variant['type']);
+			if (accepts.length) {
+				for (x = 0, xl = accepts.length; x < xl; ++x) {
+					requestValue = accepts[x][0];
+					params = accepts[x][1];
+					
+					if (requestValue === '*' || requestValue === '*/*' || requestValue === variantValue || (/^(.+\/)\*$/.test(requestValue) && variantValue.indexOf(RegExp.$1) === 0)) {
+						q = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
+						
+						//check if the size of the variant exceeds the maximum allowed bytes for this media type.
+						if (typeof variant['length'] === 'number' && typeof params === 'object' && isNumeric(params.mxb) && parseFloat(params.mxb, 10) < variant['length']) {
+							q = 0.0;
+						}
+					} else {
+						q = 0.0;
+					}
+					
+					variant.qt = Math.max(variant.qt || 0, q);
 				}
+			} else {
+				variant.qt = 1.0;
 			}
 			
-			return matches;
+			//quality of language
+			accepts = headers.acceptLanguage;
+			variantValue = lc(variant['language']);
+			if (!variantValue) {
+				variant.ql = 0.5;
+			} else if (accepts.length) {
+				for (x = 0, xl = accepts.length; x < xl; ++x) {
+					requestValue = accepts[x][0];
+					params = accepts[x][1];
+					
+					if (requestValue === '*' || requestValue === variantValue || (/^([a-z]+)\-[a-z]+$/.test(requestValue) && variantValue === RegExp.$1)) {
+						q = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
+					} else {
+						q = 0.001;  //never disqualify solely on language
+					}
+					
+					variant.ql = Math.max(variant.ql || 0, q);
+				}
+			} else {
+				variant.ql = 1.0;
+			}
+			
+			//quality of charset
+			accepts = headers.acceptCharset;
+			variantValue = lc(variant['charset']);
+			if (!variantValue) {
+				variant.qc = 1.0;
+			} else if (accepts.length) {
+				for (x = 0, xl = accepts.length; x < xl; ++x) {
+					requestValue = accepts[x][0];
+					params = accepts[x][1];
+					
+					if (requestValue === '*' || requestValue === variantValue) {
+						q = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
+					} else {
+						q = 0.0;
+					}
+					
+					variant.qc = Math.max(variant.qc || 0, q);
+				}
+			} else {
+				variant.qc = 1.0;
+			}
+			
+			//quality of encoding
+			accepts = headers.acceptEncoding;
+			variantValue = lc(variant['encoding']);
+			if (!variantValue) {
+				variant.qe = 1.0;
+			} else if (accepts.length) {
+				for (x = 0, xl = accepts.length; x < xl; ++x) {
+					requestValue = accepts[x][0];
+					params = accepts[x][1];
+					
+					if (requestValue === '*' || requestValue === variantValue) {
+						q = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
+					} else {
+						q = 0.0;
+					}
+					
+					variant.qe = Math.max(variant.qe || 0, q);
+				}
+			} else {
+				variant.qe = 1.0;
+			}
+			
+			//quality of source
+			variant.qs = variant['quality'] || 1.0;
+			
+			//total quality score
+			variant.q = variant.qm * variant.qt * variant.ql * variant.qc * variant.qe * variant.qs;
+		}
+		
+		variants.sort(function (a, b) {
+			return b.q - a.q;
 		});
 		
-		//filter by charset
+		return variants;
 	}
 	
 	this.Negotiate = {

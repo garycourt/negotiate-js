@@ -15,6 +15,7 @@
 					"post" : { "$ref" : "db:/posts/{id}" }
 				}
 			},
+			"length" : 100000,
 			"expires" : 1234567890
 		}
 	]
