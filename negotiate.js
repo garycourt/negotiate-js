@@ -128,6 +128,10 @@ var exports = exports || this,
 		//TODO
 	}
 	
+	function precision(num, val) {
+		return parseFloat(num.toPrecision(val), 10);
+	}
+	
 	function choose(variants, request) {
 		var y, yl, x, xl, headers, variant, accepts, variantValue, requestValue, params, q;
 		
@@ -248,11 +252,11 @@ var exports = exports || this,
 			variant.qs = variant['quality'] || 1.0;
 			
 			//total quality score
-			variant.q = variant.qm * variant.qt * variant.ql * variant.qc * variant.qe * variant.qs;
+			variant.q = precision(variant.qm * variant.qt * variant.ql * variant.qc * variant.qe * variant.qs, 3);
 		}
 		
 		variants.sort(function (a, b) {
-			return b.q - a.q;
+			return precision(b.q - a.q, 3) || (a['length'] && b['length'] ? a['length'] - b['length'] : 0);
 		});
 		
 		return variants;
