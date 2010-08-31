@@ -124,8 +124,48 @@ var exports = exports || this,
 		return (str || deflt || '').toLowerCase();
 	}
 	
+	function toNative(str) {
+		var lcstr = lc(str);
+		
+		if (lcstr === '') {
+			return;
+		} else if (lcstr === 'null') {
+			return null;
+		} else if (lcstr === 'false') {
+			return false;
+		} else if (lcstr === 'true') {
+			return true;
+		} else if (/^(\d+)$/.test(str)) {
+			return parseInt(str, 10);
+		} else if (/^(\d*\.\d+)$/.test(str)) {
+			return parseFloat(str, 10);
+		}
+		
+		return str;
+	}
+	
 	function parseHeaderElements(headerValue) {
-		//TODO
+		var result = [], elements, x, xl, element, y, yl, param;
+		
+		headerValue = lc(headerValue);  //convert to lowercase
+		headerValue = headerValue.replace(/\s/g, '');  //remove spaces
+		
+		if (headerValue) {
+			elements = headerValue.split(',');  //split by commas
+			
+			for (x = 0, xl = elements.length; x < xl; ++x) {
+				element = elements[x].split(';');
+				result[x] = [element[0], {}];
+				for (y = 1, yl = element.length; y < yl; ++y) {
+					param = element[y].split('=');
+					if (param.length === 2) {
+						result[x][1][param[0]] = toNative(param[1]);
+					}
+				}
+			}
+		}
+		
+		return result;
 	}
 	
 	function precision(num, val) {
@@ -138,10 +178,10 @@ var exports = exports || this,
 		variants = clone(variants, true);
 		headers = {
 			method : uc(request['method'], 'GET'),
-			acceptType : parseHeaderElements(request['accept']),
-			acceptLanguage : parseHeaderElements(request['accept-language']),
-			acceptCharset : parseHeaderElements(request['accept-charset']),
-			acceptEncoding : parseHeaderElements(request['accept-encoding'])
+			acceptType : parseHeaderElements(request.headers['accept']),
+			acceptLanguage : parseHeaderElements(request.headers['accept-language']),
+			acceptCharset : parseHeaderElements(request.headers['accept-charset']),
+			acceptEncoding : parseHeaderElements(request.headers['accept-encoding'])
 		};
 		
 		for (y = 0, yl = variants.length; y < yl; ++y) {
@@ -185,20 +225,22 @@ var exports = exports || this,
 			//quality of language
 			accepts = headers.acceptLanguage;
 			variantValue = lc(variant['language']);
-			if (!variantValue) {
-				variant.ql = 0.5;
-			} else if (accepts.length) {
+			if (accepts.length) {
 				for (x = 0, xl = accepts.length; x < xl; ++x) {
 					requestValue = accepts[x][0];
 					params = accepts[x][1];
 					
-					if (requestValue === '*' || requestValue === variantValue || (/^([a-z]+)\-[a-z]+$/.test(requestValue) && variantValue === RegExp.$1)) {
+					if (requestValue === '*' || requestValue === variantValue || (/^([a-z]+)\-[a-z]+$/.test(requestValue) && variantValue === RegExp.$1) || (/^([a-z]+)\-[a-z]+$/.test(variantValue) && requestValue === RegExp.$1)) {
 						q = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
 					} else {
 						q = 0.001;  //never disqualify solely on language
 					}
 					
 					variant.ql = Math.max(variant.ql || 0, q);
+				}
+				
+				if (variant.ql <= 0.001 && !variantValue) {
+					variant.ql = 0.5;
 				}
 			} else {
 				variant.ql = 1.0;
@@ -207,9 +249,7 @@ var exports = exports || this,
 			//quality of charset
 			accepts = headers.acceptCharset;
 			variantValue = lc(variant['charset']);
-			if (!variantValue) {
-				variant.qc = 1.0;
-			} else if (accepts.length) {
+			if (accepts.length) {
 				for (x = 0, xl = accepts.length; x < xl; ++x) {
 					requestValue = accepts[x][0];
 					params = accepts[x][1];
@@ -222,6 +262,10 @@ var exports = exports || this,
 					
 					variant.qc = Math.max(variant.qc || 0, q);
 				}
+				
+				if (!variant.qc && !variantValue) {
+					variant.qc = 1.0;
+				}
 			} else {
 				variant.qc = 1.0;
 			}
@@ -229,9 +273,7 @@ var exports = exports || this,
 			//quality of encoding
 			accepts = headers.acceptEncoding;
 			variantValue = lc(variant['encoding']);
-			if (!variantValue) {
-				variant.qe = 1.0;
-			} else if (accepts.length) {
+			if (accepts.length) {
 				for (x = 0, xl = accepts.length; x < xl; ++x) {
 					requestValue = accepts[x][0];
 					params = accepts[x][1];
@@ -243,6 +285,10 @@ var exports = exports || this,
 					}
 					
 					variant.qe = Math.max(variant.qe || 0, q);
+				}
+				
+				if (!variant.qe && (!variantValue || variantValue === 'identity')) {
+					variant.qe = 1.0;
 				}
 			} else {
 				variant.qe = 1.0;
@@ -263,7 +309,8 @@ var exports = exports || this,
 	}
 	
 	this.Negotiate = {
-		choose : choose
+		choose : choose,
+		parseHeaderElements : parseHeaderElements  //for debugging
 	};
 	
 	exports.choose = choose;
