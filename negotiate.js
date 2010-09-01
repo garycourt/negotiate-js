@@ -198,52 +198,63 @@ var exports = exports || this,
 			}
 			
 			//quality of media type
-			match = false;
+			variant.qt = 0.0;
+			variant.qts = 0;
 			accepts = headers.acceptType;
 			variantValue = lc(variant['type']);
 			if (accepts.length) {
 				for (x = 0, xl = accepts.length; x < xl; ++x) {
+					match = 0;
 					requestValue = accepts[x][0];
 					params = accepts[x][1];
 					
-					if (requestValue === '*' || requestValue === '*/*' || requestValue === variantValue || (/^(.+\/)\*$/.test(requestValue) && variantValue.indexOf(RegExp.$1) === 0)) {
-						match = true;
-						q = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
-						
-						//check if the size of the variant exceeds the maximum allowed bytes for this media type.
-						if (typeof variant['length'] === 'number' && typeof params === 'object' && isNumeric(params.mxb) && parseFloat(params.mxb, 10) < variant['length']) {
-							q = 0.0;
-						}
-					} else {
-						q = 0.0;
+					if (requestValue === '*') {
+						match = 1;
+					} else if (requestValue === '*/*') {
+						match = 2;
+					} else if (requestValue === variantValue) {
+						match = 4;
+					} else if (/^(.+\/)\*$/.test(requestValue) && variantValue.indexOf(RegExp.$1) === 0) {
+						match = 3;
 					}
 					
-					variant.qt = Math.max(variant.qt || 0, q);
+					if (match > variant.qts && !(typeof variant['length'] === 'number' && typeof params === 'object' && isNumeric(params.mxb) && parseFloat(params.mxb, 10) < variant['length'])) {
+						variant.qt = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
+						variant.qts = match;
+					}
 				}
 			} else {
 				variant.qt = 1.0;
 			}
 			
 			//quality of language
-			match = false;
+			variant.ql = 0.001;  //never disqualify solely on language
+			variant.qls = 0;
 			accepts = headers.acceptLanguage;
 			variantValue = lc(variant['language']);
 			if (accepts.length) {
 				for (x = 0, xl = accepts.length; x < xl; ++x) {
+					match = 0;
 					requestValue = accepts[x][0];
 					params = accepts[x][1];
 					
-					if (requestValue === '*' || requestValue === variantValue || (/^([a-z]+)\-[a-z]+$/.test(requestValue) && variantValue === RegExp.$1) || (/^([a-z]+)\-[a-z]+$/.test(variantValue) && requestValue === RegExp.$1)) {
-						match = true;
-						q = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
-					} else {
-						q = 0.001;  //never disqualify solely on language
+					if (requestValue === '*') {
+						match = 1;
+					} else if (requestValue === variantValue) {
+						match = 4;
+					} else if (/^([a-z]+)\-[a-z]+$/.test(requestValue) && variantValue === RegExp.$1) {
+						match = 2;
+					} else if (/^([a-z]+)\-[a-z]+$/.test(variantValue) && requestValue === RegExp.$1) {
+						match = 3;
 					}
 					
-					variant.ql = Math.max(variant.ql || 0, q);
+					if (match > variant.qls) {
+						variant.ql = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
+						variant.qls = match;
+					}
 				}
 				
-				if (!match && !variantValue) {
+				if (!variant.qls && !variantValue) {
 					variant.ql = 0.5;
 				}
 			} else {
@@ -251,25 +262,29 @@ var exports = exports || this,
 			}
 			
 			//quality of charset
-			match = false;
+			variant.qc = 0.0;
+			variant.qcs = 0;
 			accepts = headers.acceptCharset;
 			variantValue = lc(variant['charset']);
 			if (accepts.length) {
 				for (x = 0, xl = accepts.length; x < xl; ++x) {
+					match = 0;
 					requestValue = accepts[x][0];
 					params = accepts[x][1];
 					
-					if (requestValue === '*' || requestValue === variantValue) {
-						match = true;
-						q = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
-					} else {
-						q = 0.0;
+					if (requestValue === '*') {
+						match = 1;
+					} else if (requestValue === variantValue) {
+						match = 2;
 					}
 					
-					variant.qc = Math.max(variant.qc || 0, q);
+					if (match > variant.qcs) {
+						variant.qc = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
+						variant.qcs = match;
+					}
 				}
 				
-				if (!match && !variantValue) {
+				if (!variant.qcs && !variantValue) {
 					variant.qc = 1.0;
 				}
 			} else {
@@ -277,25 +292,31 @@ var exports = exports || this,
 			}
 			
 			//quality of encoding
-			match = false;
+			variant.qe = 0.0;
+			variant.qes = 0;
 			accepts = headers.acceptEncoding;
 			variantValue = lc(variant['encoding']);
 			if (accepts.length) {
 				for (x = 0, xl = accepts.length; x < xl; ++x) {
+					match = 0;
 					requestValue = accepts[x][0];
 					params = accepts[x][1];
 					
-					if (requestValue === '*' || requestValue === variantValue || (requestValue === 'identity' && !variantValue)) {
-						match = true;
-						q = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
-					} else {
-						q = 0.0;
+					if (requestValue === '*') {
+						match = 1;
+					} else if (requestValue === 'identity' && !variantValue) {
+						match = 2;
+					} else if (requestValue === variantValue) {
+						match = 3;
 					}
 					
-					variant.qe = Math.max(variant.qe || 0, q);
+					if (match > variant.qes) {
+						variant.qe = (typeof params === 'object' && isNumeric(params.q) ? parseFloat(params.q, 10) : 1.0);
+						variant.qes = match;
+					}
 				}
 				
-				if (!match && (!variantValue || variantValue === 'identity')) {
+				if (!variant.qes && (!variantValue || variantValue === 'identity')) {
 					variant.qe = 1.0;
 				}
 			} else {
@@ -303,7 +324,7 @@ var exports = exports || this,
 			}
 			
 			//quality of source
-			variant.qs = variant['quality'] || 1.0;
+			variant.qs = typeof variant['quality'] === 'number' ? variant['quality'] : 1.0;
 			
 			//total quality score
 			variant.q = precision(variant.qm * variant.qt * variant.ql * variant.qc * variant.qe * variant.qs, 3);
