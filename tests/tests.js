@@ -82,6 +82,8 @@ test("Media Type Criteria", function () {
 			headers : {}
 		};
 	
+	equal(Negotiate.choose(variants, request)[0].id, 0, "No Accept Header");
+	
 	request.headers['accept'] = '*'; 
 	equal(Negotiate.choose(variants, request)[0].id, 0, "*");
 	
@@ -97,6 +99,115 @@ test("Media Type Criteria", function () {
 	request.headers['accept'] = 'text/plain;q=0.4, image/* ; q = .8 ,application/xml,*/*;q=0.1'; 
 	equal(Negotiate.choose(variants, request)[0].id, 2, "Multiple[0]");
 	equal(Negotiate.choose(variants, request)[1].id, 4, "Multiple[1]");
+	
+	request.headers['accept'] = 'text/*;q=0.4, image/*;q=0.8, application/*;q=0.9, *'; 
+	equal(Negotiate.choose(variants, request)[0].id, 5, "Multiple2[0]");
+	equal(Negotiate.choose(variants, request)[1].id, 2, "Multiple2[1]");
+});
+
+test("Language Criteria", function () {
+	var variants = [
+			{ id : 0, language : 'en-ca' },
+			{ id : 1, language : 'en-us' },
+			{ id : 2, language : 'en' },
+			{ id : 3, language : 'fr-ca' },
+			{ id : 4 }
+		],
+		request = {
+			method : 'GET',
+			headers : {}
+		};
+	
+	equal(Negotiate.choose(variants, request)[0].id, 0, "No Accept-Language Header");
+	
+	request.headers['accept-language'] = '*'; 
+	equal(Negotiate.choose(variants, request)[0].id, 0, "*");
+	
+	request.headers['accept-language'] = 'en-us'; 
+	equal(Negotiate.choose(variants, request)[0].id, 1, "en-us");
+	
+	request.headers['accept-language'] = 'en'; 
+	equal(Negotiate.choose(variants, request)[0].id, 0, "en");
+	
+	request.headers['accept-language'] = 'fr'; 
+	equal(Negotiate.choose(variants, request)[0].id, 3, "fr");
+	
+	request.headers['accept-language'] = 'gb'; 
+	equal(Negotiate.choose(variants, request)[0].id, 4, "gb");
+	
+	request.headers['accept-language'] = 'en-ca;q=0.95, en-us, en;q=0.5, fr;q=0.3, *;q=.1'; 
+	equal(Negotiate.choose(variants, request)[0].id, 1, "Multiple[0]");
+	equal(Negotiate.choose(variants, request)[1].id, 0, "Multiple[1]");
+});
+
+test("Charset Criteria", function () {
+	var variants = [
+			{ id : 0, charset : 'US-ASCII' },
+			{ id : 1, charset : 'iso-8859-1' },
+			{ id : 2, charset : 'utf-8' },
+			{ id : 3, charset : 'utf-16' },
+			{ id : 4 }
+		],
+		request = {
+			method : 'GET',
+			headers : {}
+		};
+	
+	equal(Negotiate.choose(variants, request)[0].id, 0, "No Accept-Charset Header");
+	
+	request.headers['accept-charset'] = '*'; 
+	equal(Negotiate.choose(variants, request)[0].id, 0, "*");
+	
+	request.headers['accept-charset'] = 'iso-8859-1'; 
+	equal(Negotiate.choose(variants, request)[0].id, 1, "iso-8859-1");
+	
+	request.headers['accept-charset'] = 'utf-8, iso-8859-1;q=0.9, *;q=0'; 
+	equal(Negotiate.choose(variants, request)[0].id, 2, "Multiple[0]");
+	equal(Negotiate.choose(variants, request)[1].id, 1, "Multiple[1]");
+	equal(Negotiate.choose(variants, request)[2].q, 0.0, "Multiple[2] Quality");
+});
+
+test("Encoding Criteria", function () {
+	var variants = [
+			{ id : 0 },
+			{ id : 1, encoding : 'identity' },
+			{ id : 2, encoding : 'gzip' },
+		],
+		request = {
+			method : 'GET',
+			headers : {}
+		};
+	
+	equal(Negotiate.choose(variants, request)[0].id, 0, "No Accept-Encoding Header");
+	
+	request.headers['accept-encoding'] = '*'; 
+	equal(Negotiate.choose(variants, request)[0].id, 0, "*");
+	
+	request.headers['accept-encoding'] = 'identity';
+	equal(Negotiate.choose(variants, request)[0].id, 0, "identity[0]");
+	equal(Negotiate.choose(variants, request)[1].id, 1, "identity[1]");
+	
+	request.headers['accept-encoding'] = 'gzip,defalte,*;q=0'; 
+	equal(Negotiate.choose(variants, request)[0].id, 2, "Multiple[0]");
+	equal(Negotiate.choose(variants, request)[1].q, 0.0, "Multiple[1] Quality");
+});
+
+test("Quality Criteria", function () {
+	var variants = [
+			{ id : 0 },
+			{ id : 1, quality : 0.0 },
+			{ id : 2, quality : 1.0 },
+			{ id : 3, quality : 0.5 },
+		],
+		request = {
+			method : 'GET',
+			headers : {}
+		};
+	
+	equal(Negotiate.choose(variants, request)[0].id, 0, "Variant[0]");
+	equal(Negotiate.choose(variants, request)[1].id, 2, "Variant[1]");
+	equal(Negotiate.choose(variants, request)[2].id, 3, "Variant[2]");
+	equal(Negotiate.choose(variants, request)[3].id, 1, "Variant[3]");
 });
 
 test("Full Test", function () {
