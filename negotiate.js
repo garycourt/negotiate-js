@@ -172,6 +172,15 @@ var exports = exports || this,
 		return parseFloat(num.toPrecision(val), 10);
 	}
 	
+	/**
+	 * @name Negotiate.choose
+	 * @param {Array} variants An array of variant objects
+	 * @param {Object} request The request object, which is Node.js HTTP API compatible.
+	 * @returns {Array} A deep clone of the variants array, ordered by suitability.
+	 *   A new property "q" is added to each variant to indicate it's quality score.
+	 *   A score of 0 means the variant is unacceptable for the request.
+	 */
+	
 	function choose(variants, request) {
 		var y, yl, x, xl, headers, variant, accepts, variantValue, requestValue, params, q, match;
 		
@@ -338,8 +347,7 @@ var exports = exports || this,
 	}
 	
 	this.Negotiate = {
-		choose : choose,
-		parseHeaderElements : parseHeaderElements  //for debugging
+		choose : choose
 	};
 	
 	exports.choose = choose;
