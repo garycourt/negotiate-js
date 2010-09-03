@@ -1,9 +1,15 @@
 {
 	"name" : "Negotiate.js",
-	"description" : "A JavaScript implementation of proper HTTP content negotiation.",
 	"version" : "1.0",
-	"keywords" : ["http", "content", "negotiation", "variants", "node", "accept"],
+	"description" : "A JavaScript implementation of proper HTTP content negotiation.",
+	"homepage" : "http://github.com/garycourt/negotiate-js",
 	"author" : "Gary Court <gary.court@gmail.com>",
+	"licenses" : [
+		{
+			"type" : "FreeBSD",
+			"url" : "http://github.com/garycourt/negotiate-js/raw/master/negotiate.js"
+		}
+	],
 	"maintainers" : [
 		{
 			"name" : "Gary Court",
@@ -14,12 +20,6 @@
 		"mail" : "gary.court@gmail.com",
 		"web" : "http://github.com/garycourt/negotiate-js/issues"
 	},
-	"licenses" : [
-		{
-			"type" : "FreeBSD",
-			"url" : "http://github.com/garycourt/negotiate-js/raw/master/negotiate.js"
-		}
-	],
 	"repositories" : [
 		{
 			"type" : "git",
@@ -27,5 +27,6 @@
 		}
 	],
 	"dependencies" : {},
-	"main" : "negotiate.js"
+	"main" : "negotiate.js",
+	"keywords" : ["http", "content", "negotiation", "variants", "node", "accept"]
 }
