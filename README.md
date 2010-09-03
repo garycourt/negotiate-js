@@ -102,6 +102,15 @@ With Node.js, this can be done with the following:
 
 ## API
 
+### Negotiate.choose(variants, request)
+#### Parameters
+* `variants` An array of variant objects of the requested resource.
+* `request` A request object with the HTTP request details.
+#### Returns
+A clone of the variants array, with a `q` (quality) property attached to each variant. 
+The quality property is a number from 0 to 1 (percentage) that indicates how good of a choice that variant is for the requester. 
+This array is sorted in order of how suitable the variant is for the requester, with the best choice as the first item.
+
 ## License
 
 Negotiate.js is licensed under the FreeBSD License. 
