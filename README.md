@@ -1,23 +1,18 @@
 # Negotiate.js - HTTP Content Negotiation in JavaScript
 
-Negotiate.js is a JavaScript implementation of proper HTTP content negotiation, 
-and is designed to be compatible with Node.js's HTTP Request API.
+Negotiate.js is a JavaScript implementation of proper HTTP content negotiation, and is designed to be compatible with Node.js's HTTP Request API.
 
 ## Content Negotiation?
 
-Content negotiation is an optional feature of the HTTP protocol that allows for the automatic selection of the appropriate content 
-representation of the requested resource based upon the attributes of the request and variants.
+Content negotiation is an optional feature of the HTTP protocol that allows for the automatic selection of the appropriate content representation of the requested resource based upon the attributes of the request and variants.
 
-Still confused? More information about what is content negotiation and how it works can be found on Wikipedia at: 
-[http://en.wikipedia.org/wiki/Content_negotiation](http://en.wikipedia.org/wiki/Content_negotiation)
+Still confused? More information about what is content negotiation and how it works can be found on Wikipedia at: [http://en.wikipedia.org/wiki/Content_negotiation](http://en.wikipedia.org/wiki/Content_negotiation)
 
-Negotiate.js uses the preemptive negotiation algorithm defined in the original 
-[HTTP 1.1 draft spec](http://cidr-report.org/ietf/all-ids/draft-ietf-http-v11-spec-00.txt). 
+Negotiate.js uses the preemptive negotiation algorithm defined in the original [HTTP 1.1 draft spec](http://cidr-report.org/ietf/all-ids/draft-ietf-http-v11-spec-00.txt). 
 
 ## Example
 
-Let's say you have a blog, and you can get a list of the latest blog entries on your site using the path `/blog/`. 
-Now, let's say you have two different forms of representing this same data: as a HTML document or a Atom feed.
+Let's say you have a blog, and you can get a list of the latest blog entries on your site using the path `/blog/`. Now, let's say you have two different forms of representing this same data: as a HTML document or a Atom feed.
 
 In Negotiate.js, these different forms are called variants, and can be represented in JavaScript like so:
 
@@ -44,11 +39,9 @@ In Negotiate.js, these different forms are called variants, and can be represent
 		}
 	];
 
-All of the above variant properties are optional, but you should at least specify the mime type as it tends to be the most important. 
-Also, Negotiate.js will tend to put more weight on variants that have more known properties specified.
+All of the above variant properties are optional, but you should at least specify the mime type as it tends to be the most important. Also, Negotiate.js will tend to put more weight on variants that have more known properties specified.
 
-With the available variants for this resource (URL) defined, you can now use Negotiate.js to select the appropriate representation for 
-an incoming HTTP request. 
+With the available variants for this resource (URL) defined, you can now use Negotiate.js to select the appropriate representation for an incoming HTTP request. 
 
 	var request = {
 		url : "/blog",
@@ -107,9 +100,7 @@ With Node.js, this can be done with the following:
 * `variants` An array of variant objects of the requested resource.
 * `request` A request object with the HTTP request details.
 #### Returns
-A clone of the variants array, with a `q` (quality) property attached to each variant. 
-The quality property is a number from 0 to 1 (percentage) that indicates how good of a choice that variant is for the requester. 
-This array is sorted in order of how suitable the variant is for the requester, with the best choice as the first item.
+A clone of the variants array, with a `q` (quality) property attached to each variant. The quality property is a number from 0 to 1 (percentage) that indicates how good of a choice that variant is for the requester. This array is sorted in order of how suitable the variant is for the requester, with the best choice as the first item.
 
 ## License
 
