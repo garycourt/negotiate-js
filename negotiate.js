@@ -4,7 +4,7 @@
  * @fileOverview HTTP Content Negotiation in JavaScript
  * @author <a href="mailto:gary.court@gmail.com">Gary Court</a>
  * @version 1.0
- * @see http://github.com/garycourt/Negotiate.js
+ * @see http://github.com/garycourt/negotiate-js
  */
 
 /*
