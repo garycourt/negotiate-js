@@ -198,8 +198,8 @@ var exports = exports || this,
 			variant = variants[y];
 			
 			//quality of request method
-			variantValue = uc(variant['method'], 'GET');
-			if (variantValue === headers.method) {
+			variantValue = uc(variant['method']);
+			if (!variantValue || variantValue === headers.method) {
 				variant.qm = 1.0;
 			} else if (headers.method === 'HEAD' && variantValue === 'GET') {
 				variant.qm = 0.5;
