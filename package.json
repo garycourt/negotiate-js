@@ -1,6 +1,6 @@
 {
 	"name" : "Negotiate.js",
-	"version" : "1.0",
+	"version" : "1.0.0",
 	"description" : "A JavaScript implementation of proper HTTP content negotiation.",
 	"homepage" : "http://github.com/garycourt/negotiate-js",
 	"author" : "Gary Court <gary.court@gmail.com>",
@@ -18,7 +18,7 @@
 	],
 	"bugs" : {
 		"mail" : "gary.court@gmail.com",
-		"web" : "http://github.com/garycourt/negotiate-js/issues"
+		"url" : "http://github.com/garycourt/negotiate-js/issues"
 	},
 	"repositories" : [
 		{
