@@ -1,5 +1,5 @@
 {
-	"name" : "Negotiate.js",
+	"name" : "negotiate",
 	"version" : "1.0.0",
 	"description" : "A JavaScript implementation of proper HTTP content negotiation.",
 	"homepage" : "http://github.com/garycourt/negotiate-js",
