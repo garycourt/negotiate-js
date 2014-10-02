@@ -20,12 +20,10 @@
 		"mail" : "gary.court@gmail.com",
 		"url" : "http://github.com/garycourt/negotiate-js/issues"
 	},
-	"repositories" : [
-		{
-			"type" : "git",
-			"url" : "git://github.com/garycourt/negotiate-js.git"
-		}
-	],
+	"repository" : {
+    "type" : "git",
+    "url" : "git://github.com/garycourt/negotiate-js.git"
+  },
 	"dependencies" : {},
 	"main" : "negotiate.js",
 	"keywords" : ["http", "content", "negotiation", "variants", "node", "accept"]
