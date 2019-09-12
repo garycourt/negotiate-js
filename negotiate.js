@@ -96,7 +96,7 @@ var exports = exports || this,
 				}
 				return newObj;
 			} else {
-				return Array.pototype.slice.call(obj);
+				return Array.prototype.slice.call(obj);
 			}
 			break;
 		case 'function':
